@@ -21,6 +21,13 @@ export function lightGallery(
     exThumbImage: "src",
     ...options,
     addClass: ["halo-lightgallery", options.addClass].filter(Boolean).join(" "),
+    // Keep visible controls on phones instead of requiring undisclosed gestures.
+    mobileSettings: {
+      controls: true,
+      showCloseIcon: true,
+      download: true,
+      ...options.mobileSettings,
+    },
     plugins: [lgZoom],
   });
   // An img width attribute controls thumbnail layout, not the original image size.

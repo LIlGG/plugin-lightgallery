@@ -2,6 +2,7 @@ import createGallery from "lightgallery";
 import lgZoom from "lightgallery/plugins/zoom";
 import "lightgallery/css/lightgallery.css";
 import "lightgallery/css/lg-zoom.css";
+import "./lightgallery.css";
 
 const instances = new WeakMap<HTMLElement, ReturnType<typeof createGallery>>();
 
@@ -14,10 +15,12 @@ export function lightGallery(
     return container ? instances.get(container) : undefined;
   }
   const instance = createGallery(container, {
-    // Preserve the v1 opening effect instead of v2's thumbnail-to-fullscreen travel.
-    zoomFromOrigin: false,
+    startAnimationDuration: 200,
     backdropDuration: 150,
+    // Gallery items are images themselves, not links containing thumbnails.
+    exThumbImage: "src",
     ...options,
+    addClass: ["halo-lightgallery", options.addClass].filter(Boolean).join(" "),
     plugins: [lgZoom],
   });
   // An img width attribute controls thumbnail layout, not the original image size.

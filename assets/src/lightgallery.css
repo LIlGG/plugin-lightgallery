@@ -1,0 +1,6 @@
+/* Reveal the opening animation while the backdrop fades in, not after it.
+   Keep lightGallery's normal fade-out when lg-show-in is removed on close. */
+.halo-lightgallery.lg-show-in .lg-outer {
+  opacity: 1;
+  transition: none;
+}

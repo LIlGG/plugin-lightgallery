@@ -2,10 +2,11 @@ package run.halo.lightgallery;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
-import java.util.List;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 import io.micrometer.common.util.StringUtils;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.thymeleaf.model.IModel;
 import org.thymeleaf.model.IModelFactory;
 import org.thymeleaf.processor.element.IElementModelStructureHandler;
 import org.thymeleaf.web.IWebRequest;
+import org.unbescape.javascript.JavaScriptEscape;
 import reactor.core.publisher.Mono;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 import run.halo.app.theme.dialect.TemplateHeadProcessor;
@@ -35,6 +37,7 @@ import run.halo.app.theme.dialect.TemplateHeadProcessor;
 @RequiredArgsConstructor
 public class LightGalleryHeadProcessor implements TemplateHeadProcessor {
     private static final String TEMPLATE_ID_VARIABLE = "_templateId";
+    private static final Pattern HEX_COLOR = Pattern.compile("#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?");
     private final ReactiveSettingFetcher reactiveSettingFetcher;
     private final PathPatternRouteMatcher routeMatcher = createRouteMatcher();
 
@@ -72,7 +75,7 @@ public class LightGalleryHeadProcessor implements TemplateHeadProcessor {
 
     static String backdropStyle(String color) {
         // Only accept hex colors, including the optional alpha channel, before writing CSS.
-        String safeColor = color != null && color.matches("#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?")
+        String safeColor = color != null && HEX_COLOR.matcher(color).matches()
                 ? color : "#000000ff";
         return "<style>.lg-backdrop { background-color: " + safeColor + "; }</style>";
     }
@@ -94,15 +97,24 @@ public class LightGalleryHeadProcessor implements TemplateHeadProcessor {
     static String instantiateGallery(Set<String> domSelectors) {
         return domSelectors.stream()
                 .map(domSelector -> """
-                        document.querySelectorAll(`%s`).forEach(function (container) {
-                          container.querySelectorAll("img").forEach(function (image) {
-                            image.dataset.src = image.src;
-                          });
-                          if (!container.getAttribute("lg-uid")) {
+                        try {
+                          document.querySelectorAll("%s").forEach(function (container) {
+                            if (container.hasAttribute("lg-uid")) {
+                              return;
+                            }
+                            const images = container.querySelectorAll("img");
+                            if (images.length === 0) {
+                              return;
+                            }
+                            images.forEach(function (image) {
+                              image.dataset.src = image.src;
+                            });
                             lightGallery(container, { selector: "img" });
-                          }
-                        });
-                        """.formatted(domSelector)
+                          });
+                        } catch (error) {
+                          console.warn("LightGallery: unable to initialize a gallery rule", error);
+                        }
+                        """.formatted(JavaScriptEscape.escapeJavaScript(domSelector))
                 )
                 .collect(Collectors.joining("\n"));
     }
@@ -113,7 +125,7 @@ public class LightGalleryHeadProcessor implements TemplateHeadProcessor {
     }
 
     public MatchResult isRequestPathMatchingRoute(ITemplateContext context, BasicConfig basicConfig) {
-        if (!Contexts.isWebContext(context)) {
+        if (basicConfig.nullSafeRules().isEmpty() || !Contexts.isWebContext(context)) {
             return MatchResult.mismatch();
         }
         IWebRequest request = Contexts.asWebContext(context).getExchange().getRequest();
@@ -124,13 +136,16 @@ public class LightGalleryHeadProcessor implements TemplateHeadProcessor {
                 .stream()
                 .filter(rule -> isMatchedRoute(requestRoute, rule))
                 .map(rule -> defaultIfBlank(rule.getDomSelector(), "body"))
-                .collect(Collectors.toSet());
-        return selectors.size() > 0
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return !selectors.isEmpty()
                 ? new MatchResult(true, selectors)
                 : MatchResult.mismatch();
     }
 
     private boolean isMatchedRoute(RouteMatcher.Route requestRoute, PathMatchRule rule) {
+        if (rule == null || StringUtils.isBlank(rule.getPathPattern())) {
+            return false;
+        }
         try {
             return routeMatcher.match(rule.getPathPattern(), requestRoute);
         } catch (PatternParseException e) {

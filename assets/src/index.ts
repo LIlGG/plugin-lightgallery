@@ -5,8 +5,11 @@ import "lightgallery/css/lg-zoom.css";
 
 const instances = new WeakMap<HTMLElement, ReturnType<typeof createGallery>>();
 
-// Preserve the existing theme-side entry point and instance marker.
-window.lightGallery = (container, options = {}) => {
+// Keep instances local to this module; no browser globals are required.
+export function lightGallery(
+  container: HTMLElement,
+  options: Parameters<typeof createGallery>[1] = {},
+) {
   if (!container || container.hasAttribute("lg-uid")) {
     return container ? instances.get(container) : undefined;
   }
@@ -22,4 +25,4 @@ window.lightGallery = (container, options = {}) => {
   instances.set(container, instance);
   container.setAttribute("lg-uid", "halo-lightgallery-v2");
   return instance;
-};
+}

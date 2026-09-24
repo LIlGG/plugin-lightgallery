@@ -9,8 +9,7 @@ export default defineConfig({
     emptyOutDir: true,
     lib: {
       entry: "src/index.ts",
-      name: "assets",
-      formats: ["iife"],
+      formats: ["es"],
       fileName: () => "main.js",
     },
     rolldownOptions: {

@@ -36,7 +36,7 @@ cd path/to/plugin-lightgallery
 
 构建基线参考 [Halo 官方插件模板](https://github.com/halo-dev/create-halo-plugin/tree/d713a6c14b5060e8f76a76a4579a7b6ac5896efb/template)：Halo 2.26、Java 21、Gradle 9.4、DevTools 0.8.0、Lombok 9.2.0、Node Gradle 7.1.0，以及模板的 Vite、TypeScript 和 pnpm 版本范围。实际前端版本固定在锁文件中。
 
-本插件没有 Console UI 扩展，保留单独的主题脚本 IIFE 构建，不引入模板的 Vue、Console bundler 或 UI 子模块。静态资源只生成到 `build/generated-resources/static` 并打入 JAR，不提交生成文件。Java 测试也会通过 Node.js 执行页面初始化脚本的行为回归。
+本插件没有 Console UI 扩展，主题脚本使用标准 ESM，通过页面中的 `type="module"` 脚本导入并初始化，不依赖 `window.lightGallery` 或 Console 加载器。模块脚本会在文档解析后执行，无需额外监听 `DOMContentLoaded`。不引入模板的 Vue、Console bundler 或 UI 子模块。静态资源只生成到 `build/generated-resources/static` 并打入 JAR，不提交生成文件。Java 测试也会通过 Node.js 执行页面初始化脚本的行为回归。
 
 CI 使用模板的共享工作流 v4。CD 暂保留 v1 的用户名/密码发布方式；迁移 v4 需要先为上游仓库配置 `halo-pat`，不能直接沿用旧 secrets。
 

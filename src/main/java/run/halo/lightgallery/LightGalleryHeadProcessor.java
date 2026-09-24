@@ -84,11 +84,9 @@ public class LightGalleryHeadProcessor implements TemplateHeadProcessor {
         return """
                 <!-- PluginLightGallery start -->
                 <link href="/plugins/PluginLightGallery/assets/static/main.css" rel="stylesheet" />
-                <script defer src="/plugins/PluginLightGallery/assets/static/main.js"></script>
-                <script type="text/javascript">
-                    document.addEventListener("DOMContentLoaded", function () {
-                       %s
-                    });
+                <script type="module">
+                    import { lightGallery } from "/plugins/PluginLightGallery/assets/static/main.js";
+                    %s
                 </script>
                 <!-- PluginLightGallery end -->
                 """.formatted(instantiateGallery(domSelectors));

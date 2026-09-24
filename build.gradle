@@ -36,7 +36,7 @@ test {
 
 node {
     nodeProjectDir = file("${project.projectDir}/assets")
-    pnpmVersion = '9.15.0'
+    pnpmVersion = '10.33.0'
 }
 
 tasks.named('pnpmInstall') {
@@ -47,8 +47,7 @@ tasks.register('buildFrontend', PnpmTask) {
     args = ['build']
     dependsOn tasks.named('pnpmInstall')
     inputs.dir('assets/src')
-    inputs.files('assets/package.json', 'assets/pnpm-lock.yaml',
-        'assets/tsconfig.json', 'assets/vite.config.ts')
+    inputs.files(fileTree(dir: 'assets', includes: ['*.ts', '*.js', '*.json', '*.yaml']))
     outputs.dir(layout.buildDirectory.dir('generated-resources/static'))
 }
 
@@ -67,5 +66,5 @@ tasks.named('generatePluginComponentsIdx') {
 }
 
 halo {
-    version = '2.26.1'
+    version = '2.26'
 }

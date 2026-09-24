@@ -13,7 +13,13 @@ export function lightGallery(
   if (!container || container.hasAttribute("lg-uid")) {
     return container ? instances.get(container) : undefined;
   }
-  const instance = createGallery(container, { ...options, plugins: [lgZoom] });
+  const instance = createGallery(container, {
+    // Preserve the v1 opening effect instead of v2's thumbnail-to-fullscreen travel.
+    zoomFromOrigin: false,
+    backdropDuration: 150,
+    ...options,
+    plugins: [lgZoom],
+  });
   // An img width attribute controls thumbnail layout, not the original image size.
   // Let zoom use naturalWidth unless the author explicitly supplied data-width.
   instance.galleryItems.forEach((item, index) => {

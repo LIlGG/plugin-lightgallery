@@ -12,10 +12,16 @@ spec:
           label: 内容页面匹配
           name: dom_selector
           value: ""
-        - $formkit: repeater
+        - $formkit: array
           name: rules
           label: 页面匹配规则
           value: [ ]
+          addLabel: 添加规则
+          itemLabels:
+            - type: text
+              label: $value.pathPattern
+            - type: text
+              label: $value.domSelector
           children:
             - $formkit: text
               name: pathPattern
